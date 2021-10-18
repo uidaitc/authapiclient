@@ -4,7 +4,7 @@ import auth_2_0.*;
 import auth_2_0.types.AuthRcType;
 import auth_2_0.types.DataFormat;
 import auth_2_0.types.UsesType;
-import constants.ApplicationProperties;
+import constants.Constants;
 import org.apache.commons.lang.ArrayUtils;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -13,28 +13,39 @@ import org.exolab.castor.xml.ValidationException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
-import java.rmi.MarshalException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Security;
 import java.util.Date;
+import java.util.Properties;
 
 public class OTPAuth {
 
-    public ApplicationProperties applicationProperties = new ApplicationProperties();
-    HelperClass helperClass = new HelperClass(applicationProperties);
+    public Constants constants = new Constants();
+    HelperClass helperClass;
+
+    Properties configProp = new Properties();
+
+    public void readProperties() throws IOException {
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("application.properties");
+        configProp.load(in);
+        helperClass = new HelperClass(configProp);
+    }
+
 
     public Auth createResidentAuth(String uid, String txn, String otpInRequest, String timeStamp, String mobile) throws ValidationException, NoSuchProviderException, NoSuchAlgorithmException, InvalidCipherTextException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchPaddingException, org.exolab.castor.xml.MarshalException {
         Security.addProvider(new BouncyCastleProvider()); // added
         Auth auth = new Auth();
 
-        auth.setVer(this.applicationProperties.getAuthReqVersion());
+        auth.setVer(configProp.getProperty(Constants.AUTH_REQ_VERSION));
         auth.setRc(AuthRcType.Y);
-        auth.setAc(this.applicationProperties.getAuthRequestAua());
-        auth.setLk(this.applicationProperties.getAuthReqAuaLK());
-        auth.setSa(this.applicationProperties.getAuthRequestSa());
+        auth.setAc(configProp.getProperty(Constants.AUTH_REQ_AUA));
+        auth.setLk(configProp.getProperty(Constants.AUTH_REQ_AUA_LK));
+        auth.setSa(configProp.getProperty(Constants.AUTH_REQUEST_ASA));
         auth.setTid("");
         auth.setTxn(txn);
         auth.setUid(uid);
@@ -77,7 +88,7 @@ public class OTPAuth {
 
         // s key
         Skey skey = new Skey();
-        skey.setContent(helperClass.encrypt(sessionKey, applicationProperties.getAuthReqPubKeyFile()));
+        skey.setContent(helperClass.encrypt(sessionKey, configProp.getProperty(Constants.AUTH_REQ_PUB_KEY_FILE)));
         skey.setCi(helperClass.getCI());
         auth.setSkey(skey);
 

@@ -6,10 +6,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
-import constants.ApplicationProperties;
-import in.gov.uidai.platform.impl.transcoder.CastorHelper;
-import in.gov.uidai.platform.impl.transcoder.TranscoderFactory;
-import in.gov.uidai.platform.spi.transcoder.XMLTranscoder;
+import constants.Constants;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -57,14 +54,13 @@ import java.util.*;
 public class HelperClass {
 
 
-    public HelperClass(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
+    public HelperClass(Properties configProp) {
+        this.configProp = configProp;
     }
 
     private static ClassDescriptorResolver cdr = new ClassDescriptorResolverImpl();
 
-    private ApplicationProperties applicationProperties;
-    private static XMLTranscoder transcoder = TranscoderFactory.getDefaultTranscoder();
+    Properties configProp = new Properties();
     private KeyStore.PrivateKeyEntry keyEntry;
     public static X509Certificate publicKey;
     public static PublicKey pk;
@@ -86,7 +82,7 @@ public class HelperClass {
 
     public String createPid(String otpInRequest, Date timestamp, String mobile) throws MarshalException, ValidationException {
         Pid pid = new Pid();
-        pid.setVer(this.applicationProperties.getPidVersion());
+        pid.setVer(configProp.getProperty(Constants.PID_VERSION));
         pid.setTs(timestamp);
         pid.setWadh("");
 
@@ -165,7 +161,7 @@ public class HelperClass {
     }
 
     public AuthResponseDetailsV2 getAuthResponseDetailsV2(Auth auth) throws Exception {
-        URI authServerURI = new URL(applicationProperties.getAuthReqUrl()).toURI();
+        URI authServerURI = new URL(configProp.getProperty(Constants.AUTH_REQ_URL)).toURI();
         String signedXML = generateSignedAuthXML(auth);
         // _log.info(signedXML);
 
@@ -178,8 +174,8 @@ public class HelperClass {
                     + auth.getAc() + "/" + "0" + "/" + "0";
         }
 
-        if (StringUtils.isNotBlank(applicationProperties.getAuthReqAsaLK())) {
-            uriString = uriString + "/" + applicationProperties.getAuthReqAsaLK();
+        if (StringUtils.isNotBlank(configProp.getProperty(Constants.AUTH_REQ_ASA_LK))) {
+            uriString = uriString + "/" + configProp.getProperty(Constants.AUTH_REQ_ASA_LK);
         }
 
         URI authServiceURI = new URI(uriString);
@@ -231,9 +227,9 @@ public class HelperClass {
                 ctx.init(null, mytm, null);
                 ((DefaultClientConfig) config).getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, ctx));
             } catch (NoSuchAlgorithmException e) {
-                System.out.println(e);
+                e.printStackTrace();
             } catch (KeyManagementException e) {
-                System.out.println(e);
+                e.printStackTrace();
             }
         }
 
@@ -332,22 +328,22 @@ public class HelperClass {
         FileInputStream keyFileStream = null;
         try {
             KeyStore ks = KeyStore.getInstance(KEY_STORE_TYPE);
-            keyFileStream = new FileInputStream(this.applicationProperties.getAuthReqDigSigFile());
-            ks.load(keyFileStream, this.applicationProperties.getAuthReqDigSigPassword().toCharArray());
+            keyFileStream = new FileInputStream(configProp.getProperty(Constants.AUTH_REQ_DIG_SIG_FILE));
+            ks.load(keyFileStream, configProp.getProperty(Constants.AUTH_REQ_DIG_SIG_PASSWORD).toCharArray());
 
-            KeyStore.PrivateKeyEntry entry = (KeyStore.PrivateKeyEntry) ks.getEntry(applicationProperties.getAuthReqDigSigKeyAlias(),
-                    new KeyStore.PasswordProtection(applicationProperties.getAuthReqDigSigPassword().toCharArray()));
+            KeyStore.PrivateKeyEntry entry = (KeyStore.PrivateKeyEntry) ks.getEntry(configProp.getProperty(Constants.AUTH_REQ_DIG_SIG_KEY_ALIAS),
+                    new KeyStore.PasswordProtection(configProp.getProperty(Constants.AUTH_REQ_DIG_SIG_PASSWORD).toCharArray()));
             return entry;
 
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
             return null;
         } finally {
             if (keyFileStream != null) {
                 try {
                     keyFileStream.close();
                 } catch (IOException e) {
-                    System.out.println(e);
+                    e.printStackTrace();
                 }
             }
         }
@@ -387,7 +383,7 @@ public class HelperClass {
             return pk;
 
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         } finally {
             IOUtils.closeQuietly(stream);
         }
@@ -406,7 +402,7 @@ public class HelperClass {
             certificateIdentifier = ciDateFormat.format(publicKey.getNotAfter());
             return certificateIdentifier;
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
         return certificateIdentifier;
 
