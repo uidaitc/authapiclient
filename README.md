@@ -12,8 +12,8 @@ Auth-client provides an interface  to  interact  with  the  Auth  API of UIDAI. 
 UID/VID on your registered mobile number, this test client makes a call to Auth API to verify the OTP.
 
 
-#### Minimum Requirements
-- Java 11
+#### Requirements
+- Java 8 (required) 
 - Maven 3.6.1
 
 ### Steps to run
