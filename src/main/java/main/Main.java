@@ -19,9 +19,9 @@ public class Main {
 
             String uid = args[0];
             String txn = args[1];
-            String optRequest = args[2];
-            System.out.println("UID: "+uid+" TxnId: "+txn+" OTP :"+optRequest);
-            Auth auth = OTPAuth.createResidentAuth(uid, txn, optRequest, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()), "");
+            String otpInRRequest = args[2];
+            System.out.println("UID: "+uid+" TxnId: "+txn+" OTP :"+otpInRRequest);
+            Auth auth = OTPAuth.createResidentAuth(uid, txn, otpInRRequest, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()), "");
             AuthResponseDetailsV2 data = helperClass.getAuthResponseDetailsV2(auth);
 
             // Get Auth Response
